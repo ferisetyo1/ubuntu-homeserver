@@ -201,6 +201,116 @@ Install only the tools needed for your workflow:
 
 Keep development tools and application data organized so that maintenance and migration are easier.
 
+## ⚙️ Automated Installation
+
+This repository includes `install-homeserver.sh`, a bootstrap script that prepares an Ubuntu machine for home server and development workloads.
+
+### What Gets Installed?
+
+| Component | Purpose |
+|---|---|
+| OpenSSH Server | Remote server administration |
+| Git & Build Tools | Development utilities |
+| Python 3 | Python development environment |
+| OpenJDK 17 & 21 | Java development |
+| Node.js 24 & pnpm | JavaScript and TypeScript development |
+| CasaOS | Web-based server management |
+| Docker & Compose | Containerized applications, provided by the CasaOS installation |
+| Tailscale | Private remote connectivity |
+| UFW | Host firewall |
+| Fail2ban | Protection against repeated authentication failures |
+| Unattended Upgrades | Automatic package security updates |
+| Nextcloud | Self-hosted file storage and collaboration |
+
+### Prerequisites
+
+- A fresh Ubuntu Server installation.
+- A supported 64-bit Ubuntu release; the script targets Ubuntu Server 24.04 LTS or newer.
+- A working internet connection.
+- A user account with `sudo` privileges.
+- SSH or local console access.
+- Enough free storage for Docker images, application data, and Nextcloud files.
+
+### Run the Installer
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ferisetyo1/ubuntu-homeserver.git
+cd ubuntu-homeserver
+```
+
+Review the script before running it:
+
+```bash
+less install-homeserver.sh
+```
+
+Run the installer:
+
+```bash
+sudo bash install-homeserver.sh
+```
+
+**Important:** This script makes system-wide changes, installs software, configures services, and enables the firewall. Review the source code and understand the network implications before running it on an existing server.
+
+### After Installation
+
+Check the services:
+
+```bash
+systemctl status ssh
+systemctl status docker
+systemctl status tailscaled
+systemctl status fail2ban
+```
+
+Authenticate Tailscale if necessary:
+
+```bash
+sudo tailscale up
+tailscale ip -4
+```
+
+Check running containers:
+
+```bash
+cd /opt/nextcloud
+sudo docker compose ps
+```
+
+Review the installation log:
+
+```bash
+sudo less /var/log/homeserver-install.log
+```
+
+Nextcloud's generated administrator password is stored in `/opt/nextcloud/.env`. Retrieve it locally when needed:
+
+```bash
+sudo grep '^NEXTCLOUD_ADMIN_PASSWORD=' /opt/nextcloud/.env
+```
+
+Keep this credential private and never commit `.env` to Git.
+
+### Network Access
+
+The installer prints the expected addresses for CasaOS and Nextcloud:
+
+- CasaOS: `http://SERVER-IP/`
+- Nextcloud: `http://SERVER-IP:8080/`
+
+These are HTTP addresses intended for initial setup on a trusted network. Do not assume that UFW alone restricts Docker-published ports. Review the Docker port bindings and firewall behavior before exposing any service to other networks or the internet.
+
+### Important Limitations
+
+- The installer does not configure backups.
+- SSH password authentication is not disabled automatically.
+- Tailscale authentication may require an interactive step.
+- Java, Node.js, and Python are installed as development tools; project-specific dependencies still need to be configured.
+- Nextcloud storage and database volumes require a separate backup strategy.
+- The script is a bootstrap utility, not a complete production-hardening solution.
+
 ## 🔐 Security
 
 - Keep Ubuntu and installed packages updated.
